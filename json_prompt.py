@@ -5,6 +5,8 @@ import itertools
 from collections import ChainMap
 from execution import PromptExecutor
 from . import register_node
+import folder_paths
+
 
 @register_node
 class JSONPromptNode:
@@ -15,14 +17,13 @@ class JSONPromptNode:
 
     @classmethod
     def INPUT_TYPES(cls):
-        json_files = [f for f in os.listdir(cls.JSON_DIRECTORY) if f.endswith('.json')]
-        json_files_options = [(file, file) for file in json_files] 
+        json_folder = os.path.join(folder_paths.base_path,"prompt")
+        json_files = [os.path.join(json_folder, file) for file in os.listdir(json_folder) if file.endswith('.json')]
         
-        return {
-            "required": {
-                "json_file": ("STRING", {"options": json_files_options, "default": json_files[0]} if json_files else ("STRING", {"default": ""})),
-            }
-        }
+        print(json_files)
+        
+        return {"required": { "json_file": (json_files, ),
+                             }}
 
     RETURN_TYPES = ("SEQUENCE",)
     RETURN_NAMES = ("sequence", )
@@ -30,7 +31,7 @@ class JSONPromptNode:
     CATEGORY = "test pipeline"
 
     def load_prompts_from_file(self, file_path):
-        full_path = os.path.join(self.JSON_DIRECTORY, file_path)
+        full_path = file_path
         with open(full_path, 'r') as file:
             data = json.load(file)
             self.prompts = [prompt['text'] for prompt in data.get('prompts', [])]
