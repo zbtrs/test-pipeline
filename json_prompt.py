@@ -51,7 +51,8 @@ class ImageInputNode:
         
         images_as_string = str(self.images)
         
-        return (ast.literal_eval(images_as_string), )
+        return (ast.literal_eval(images_as_string), )from folder_paths import *
+folder_names_and_paths["prompt"] = ([os.path.join(models_dir, "prompt")], [".json"])
 
 @register_node
 class JSONPromptNode:
@@ -61,13 +62,11 @@ class JSONPromptNode:
 
     @classmethod
     def INPUT_TYPES(cls):
-        json_folder = os.path.join(folder_paths.base_path,"prompt")
-        json_files = [os.path.join(json_folder, file) for file in os.listdir(json_folder) if file.endswith('.json')]
-        
-        print(json_files)
-        
-        return {"required": { "json_file": (json_files, ),
-                             }}
+        return {
+            "required": { 
+                "json_file": (folder_paths.get_filename_list("prompt"), ),
+            }
+        }
 
     RETURN_TYPES = ("SEQUENCE",)
     RETURN_NAMES = ("sequence", )
@@ -75,7 +74,7 @@ class JSONPromptNode:
     CATEGORY = "test pipeline"
 
     def load_prompts_from_file(self, file_path):
-        full_path = file_path
+        full_path = folder_paths.get_full_path("prompt", file_path)
         with open(full_path, 'r') as file:
             data = json.load(file)
             self.prompts = [prompt['text'] for prompt in data.get('prompts', [])]
