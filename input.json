@@ -1,0 +1,44 @@
+{
+    "images": [
+        {
+            "id": 1,
+            "path": "/data0/zbtrs/ComfyUI/input/1.png"
+        },
+        {
+            "id": 2,
+            "path": "/data0/zbtrs/ComfyUI/input/2.jpg"
+        },
+        {
+            "id": 3,
+            "path": "/data0/zbtrs/ComfyUI/input/3.jpg"
+        },
+        {
+            "id": 4,
+            "path": "/data0/zbtrs/ComfyUI/input/4.jpg"
+        },
+        {
+            "id": 5,
+            "path": "/data0/zbtrs/ComfyUI/input/5.jpg"
+        },
+        {
+            "id": 6,
+            "path": "/data0/zbtrs/ComfyUI/input/6.jpg"
+        },
+        {
+            "id": 7,
+            "path": "/data0/zbtrs/ComfyUI/input/7.jpg"
+        },
+        {
+            "id": 8,
+            "path": "/data0/zbtrs/ComfyUI/input/8.jpg"
+        },
+        {
+            "id": 9,
+            "path": "/data0/zbtrs/ComfyUI/input/9.jpg"
+        },
+        {
+            "id": 10,
+            "path": "/data0/zbtrs/ComfyUI/input/10.jpg"
+        }
+    ]
+}
