@@ -51,7 +51,9 @@ class ImageInputNode:
         
         images_as_string = str(self.images)
         
-        return (ast.literal_eval(images_as_string), )from folder_paths import *
+        return (ast.literal_eval(images_as_string), )
+
+from folder_paths import *
 folder_names_and_paths["prompt"] = ([os.path.join(models_dir, "prompt")], [".json"])
 
 @register_node
