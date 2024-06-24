@@ -5,7 +5,6 @@ import itertools
 from collections import ChainMap
 from execution import PromptExecutor
 from . import register_node
-import folder_paths
 from PIL import Image, ImageOps, ImageSequence, ImageFile
 from PIL.PngImagePlugin import PngInfo
 import folder_paths
@@ -14,8 +13,13 @@ import node_helpers
 import numpy as np
 import safetensors.torch
 import torch
+from openpyxl import Workbook, load_workbook
+from openpyxl.drawing.image import Image as OpenpyxlImage
+from openpyxl.styles import Alignment
 
 
+from folder_paths import *
+folder_names_and_paths["image"] = ([os.path.join(models_dir, "image")], [".json"])
 @register_node
 class ImageInputNode:
     def __init__(self):
@@ -23,13 +27,11 @@ class ImageInputNode:
 
     @classmethod
     def INPUT_TYPES(cls):
-        json_folder = os.path.join(folder_paths.base_path,"image_input")
-        json_files = [os.path.join(json_folder, file) for file in os.listdir(json_folder) if file.endswith('.json')]
-        
-        print(json_files)
-        
-        return {"required": { "json_file": (json_files, ),
-                             }}
+        return {
+            "required": { 
+                "json_file": (folder_paths.get_filename_list("image"), ),
+            }
+        }
 
     RETURN_TYPES = ("SEQUENCE",)
     RETURN_NAMES = ("sequence", )
@@ -216,8 +218,74 @@ class JobIterator:
     def go(self, job, start_step):
         print(f'JobIterator: {start_step + 1} / {len(job)}')
         return (job[start_step], len(job), start_step)
+    
+@register_node
+class CustomSaveImage:
+    def __init__(self):
+        self.type = "output"
+    
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+              "images": ("IMAGE",),
+              "dir_name": ("STRING", {"default": ''}),
+              "prompt": ("STRING", {"default": ''}),
+            },
+        }
+    
+    RETURN_TYPES = ()
+    RETURN_NAMES = ()
+    FUNCTION = "go"
+    CATEGORY = "test pipeline"
+    OUTPUT_NODE = True
 
+    def go(self, images, dir_name, prompt):
+        results = list()
+        output_dir_path = os.path.join(folder_paths.base_path, 'output', dir_name)
 
+        os.makedirs(output_dir_path, exist_ok=True)
+
+        excel_path = os.path.join(output_dir_path, f"{dir_name}.xlsx")
+
+        if not os.path.exists(excel_path):
+            wb = Workbook()
+            ws = wb.active
+            ws.title = dir_name
+            ws.column_dimensions['A'].width = 150
+            ws.column_dimensions['B'].width = 100
+            wb.save(excel_path)
+        else:
+            wb = load_workbook(excel_path)
+            ws = wb.active
+
+        max_filename_length = 50 
+        truncated_prompt = prompt[:max_filename_length - len("_.png")]
+
+        for (batch_number, image) in enumerate(images):
+            i = 255. * image.cpu().numpy()
+            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            file = f"{truncated_prompt}_.png"
+            file_path = os.path.join(output_dir_path, file)
+            img.save(file_path)
+            results.append({
+                "filename": file,
+                "subfolder": dir_name,
+                "type": self.type
+            })
+
+            next_row = ws.max_row + 1
+            ws.row_dimensions[next_row].height = 800
+            ws[f'B{next_row}'] = prompt
+            ws[f'B{next_row}'].alignment = Alignment(horizontal='left', vertical='top')
+
+            excel_img = OpenpyxlImage(file_path)
+            ws.add_image(excel_img, f'A{next_row}')
+
+        wb.save(excel_path)
+
+        return { "ui": { "images": results } }
+    
 orig_execute = PromptExecutor.execute
 
 
